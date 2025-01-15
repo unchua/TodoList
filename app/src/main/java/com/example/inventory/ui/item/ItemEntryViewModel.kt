@@ -46,7 +46,7 @@ class ItemEntryViewModel(private val itemsRepository: ItemsRepository) : ViewMod
 
     private fun validateInput(uiState: ItemDetails = itemUiState.itemDetails): Boolean {
         return with(uiState) {
-            name.isNotBlank() && price.isNotBlank() && quantity.isNotBlank()
+            title.isNotBlank() && estimatedTime.isNotBlank() && dueDate.isNotBlank()
         }
     }
 
@@ -67,9 +67,9 @@ data class ItemUiState(
 
 data class ItemDetails(
     val id: Int = 0,
-    val name: String = "",
-    val price: String = "",
-    val quantity: String = "",
+    val title: String = "",
+    val dueDate: String = "",
+    val estimatedTime: String = "",
 )
 
 /**
@@ -79,14 +79,15 @@ data class ItemDetails(
  */
 fun ItemDetails.toItem(): Item = Item(
     id = id,
-    name = name,
-    price = price.toDoubleOrNull() ?: 0.0,
-    quantity = quantity.toIntOrNull() ?: 0
+    title = title,
+    dueDate = dueDate.toIntOrNull() ?: 0,
+    estimatedTime = estimatedTime.toIntOrNull() ?: 0
 )
 
-fun Item.formatedPrice(): String {
-    return NumberFormat.getCurrencyInstance().format(price)
-}
+// 一个类的方法定义在类外，或许我也可以这么对日期。  Todo
+//fun Item.formatedPrice(): String {
+//    return NumberFormat.getCurrencyInstance().format(price)
+//}
 
 /**
  * Extension function to convert [Item] to [ItemUiState]
@@ -101,7 +102,7 @@ fun Item.toItemUiState(isEntryValid: Boolean = false): ItemUiState = ItemUiState
  */
 fun Item.toItemDetails(): ItemDetails = ItemDetails(
     id = id,
-    name = name,
-    price = price.toString(),
-    quantity = quantity.toString()
+    title = title,
+    dueDate = dueDate.toString(),
+    estimatedTime =  estimatedTime.toString()
 )

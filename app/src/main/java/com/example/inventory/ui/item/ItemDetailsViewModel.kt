@@ -41,7 +41,7 @@ class ItemDetailsViewModel(
         itemsRepository.getItemStream(itemId)
             .filterNotNull()
             .map {
-                ItemDetailsUiState(itemDetails = it.toItemDetails(), outOfStock = it.quantity <=0 )
+                ItemDetailsUiState(itemDetails = it.toItemDetails() )
             }.stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
@@ -51,14 +51,6 @@ class ItemDetailsViewModel(
         private const val TIMEOUT_MILLIS = 5_000L
     }
 
-    fun reduceQuantityByOne() {
-        viewModelScope.launch {
-            val currentItem = uiState.value.itemDetails.toItem()
-            if (currentItem.quantity > 0) {
-                itemsRepository.updateItem(currentItem.copy(quantity = currentItem.quantity - 1))
-            }
-        }
-    }
 
     suspend fun deleteItem() {
         itemsRepository.deleteItem(uiState.value.itemDetails.toItem())
@@ -69,6 +61,5 @@ class ItemDetailsViewModel(
  * UI state for ItemDetailsScreen
  */
 data class ItemDetailsUiState(
-    val outOfStock: Boolean = true,
     val itemDetails: ItemDetails = ItemDetails()
 )

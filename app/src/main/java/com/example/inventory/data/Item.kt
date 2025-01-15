@@ -27,7 +27,7 @@ import androidx.room.PrimaryKey
 data class Item(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val name: String,
-    val price: Double,
-    val quantity: Int
+    val title: String,
+    val dueDate: Int, // 使用时间戳表示
+    val estimatedTime: Int, // 预计时间，以分钟为单位
 )
