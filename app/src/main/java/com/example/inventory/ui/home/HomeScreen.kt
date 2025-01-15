@@ -18,6 +18,7 @@ package com.example.inventory.ui.home
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -29,11 +30,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -41,6 +47,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -62,6 +71,11 @@ object HomeDestination : NavigationDestination {
     override val titleRes = R.string.app_name
 }
 
+enum class SortBy {
+    DUE_DATE,
+    ESTIMATED_TIME
+}
+
 /**
  * Entry route for Home screen
  */
@@ -75,6 +89,8 @@ fun HomeScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val homeUiState by viewModel.homeUiState.collectAsState()
+    var sortBy by remember {  mutableStateOf(SortBy.DUE_DATE) }
+    var expanded by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -97,12 +113,41 @@ fun HomeScreen(
                 )
             }
         },
+        bottomBar = {
+            BottomAppBar {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                    IconButton(onClick = { expanded = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "Sort Options")
+                    }
+                    DropdownMenu(expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            onClick = {
+                                sortBy = SortBy.DUE_DATE
+                                expanded = false
+                            },
+                            text = { Text("Sort by Due Date") }
+                        )
+                        DropdownMenuItem(
+                            onClick = {
+                                sortBy = SortBy.ESTIMATED_TIME
+                                expanded = false
+                            },
+                            text = { Text("Sort by Estimated Time") }
+                        )
+                    }
+
+                }
+            }
+        }
     ) { innerPadding ->
         HomeBody(
             itemList = homeUiState.itemList,
             onItemClick = navigateToItemUpdate,
             modifier = modifier.fillMaxSize(),
             contentPadding = innerPadding,
+            sortBy = sortBy
         )
     }
 }
@@ -113,6 +158,7 @@ private fun HomeBody(
     onItemClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    sortBy: SortBy = SortBy.DUE_DATE
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -126,8 +172,12 @@ private fun HomeBody(
                 modifier = Modifier.padding(contentPadding),
             )
         } else {
+            val sortedList = when(sortBy) {
+                SortBy.DUE_DATE -> itemList.sortedBy { it.dueDate }
+                SortBy.ESTIMATED_TIME -> itemList.sortedBy { it.estimatedTime }
+            }
             InventoryList(
-                itemList = itemList,
+                itemList = sortedList,
                 onItemClick = { onItemClick(it.id) },
                 contentPadding = contentPadding,
                 modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
